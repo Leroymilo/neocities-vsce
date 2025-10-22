@@ -1,0 +1,62 @@
+{
+  "name": "neocities",
+  "displayName": "neocities",
+  "publisher": "parkerbjur",
+  "description": "utility to manage neocities website",
+  "version": "0.0.6",
+  "icon": "/assets/neocitieslogo.png",
+  "engines": {
+    "vscode": "^1.93.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "neocities",
+    "website",
+    "deploy"
+  ],
+  "markdown": "github",
+  "pricing": "Free",
+  "activationEvents": [],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [{
+      "command": "neocities.push",
+      "title": "Neocities: Push"
+    },{
+      "command": "neocities.login",
+      "title": "Neocities: Login"
+    },{
+      "command": "neocities.logout",
+      "title": "Neocities: Logout"
+    },{
+      "command": "neocities.set_api_key",
+      "title": "Neocities: Set API Key"
+    }],
+    "configuration": {
+      "type": "object",
+      "title": "Neocities",
+      "properties": {
+        "neocities.subdirectory": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "The subdirectory to upload files from. If not set, the extension will upload files from the root of the workspace."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "pretest": "npm run lint",
+    "test": "vscode-test"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.93.0",
+    "@types/mocha": "^10.0.7",
+    "@types/node": "20.x",
+    "eslint": "^9.9.1",
+    "@vscode/test-cli": "^0.0.10",
+    "@vscode/test-electron": "^2.4.1"
+  }
+}
