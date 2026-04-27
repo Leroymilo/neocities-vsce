@@ -2,7 +2,7 @@
 
 I'm trying to figure out how to get an extension working, with zero experience with node.js...
 I want to add:
-- a "pull" command
+- a "pull" command (downloading requires knowing the site url)
 - support for a .neoignore file
 
 # neocities README

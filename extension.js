@@ -83,7 +83,106 @@ function activate(context) {
 			return;
 		}
 
+		const workspaceRoot = vscode.workspace.workspaceFolders[0].uri.fsPath;
+		const subdirectory = vscode.workspace.getConfiguration('neocities').get('subdirectory');
+		const buildDirectory = path.join(workspaceRoot, subdirectory);
+		let glob = "**/*"
+		if (subdirectory !== "") {
+			glob = subdirectory + "/" + glob;
+		}
+		const file_names = await vscode.workspace.findFiles(glob);
+		console.log(file_names);
+
+		const local_files = await Promise.all(file_names.map(async (file_path) => {
+			const content = await fs.readFile(file_path.fsPath);
+
+			let relativePath = path.relative(buildDirectory, file_path.fsPath);
+			// normalize windows paths to use '/' as seperator
+			if (path.sep == "\\") {
+				relativePath = relativePath.replace(/\\/g, '/')
+			}
+			
+			console.log(`Processing file: ${relativePath}`);
+			const file = new File([content], relativePath);
+			file.sha1_hash = crypto.createHash('sha1').update(content).digest('hex');
+			return file 
+		}));
+		console.log(local_files)
+
+		let download_files = [];
+		let delete_files = [];
+		await fetch("https://neocities.org/api/list", {
+			method: 'GET',
+			headers: {
+				'Authorization': `Bearer ${api_key}`
+			}
+		}).then(async response => {
+			if (response.status == 200) {
+				const data = await response.json();
+				const remote_files = data.files;
+
+				download_files = remote_files.filter(remote_file => {
+					const local_file = local_files.find(local_file => remote_file.path == local_file.name);
+
+					if (!local_file) {
+						console.info(`${remote_file.path} not found locally`)
+						return true;
+					}
+					if (remote_file.sha1_hash !== local_file.sha1_hash) {
+						console.info(`${remote_file.path} has changed`)
+						return true;
+					}
+					console.info(`${remote_file.path} not changed`)
+					return false;
+				});
+
+				delete_files = local_files.filter(local_file => {
+					const remote_file = remote_files.find(remote_file => remote_file.path == local_file.name);
+					if (!remote_file) {
+						console.info(`local file ${local_file.name} not on remote`)
+						return true;
+					}
+					return false;
+				});
+			}
+		})
+
+		if (delete_files.length > 0) {
+			let deleted = 0;
+			let delete_all = false;
+			for (const file of delete_files) {
+				if (!delete_all) {
+					const res = await vscode.window.showInformationMessage(`Delete ${file.name}?`, ["Delete", "Delete All", "Keep", "Keep All"])
+					if (res) {
+						if (res == "Keep") continue;
+						else if (res == "Keep All") break;
+						else if (res == "Delete All") delete_all = true;
+					} else {
+						vscode.window.showErrorMessage('pull cancelled');
+						return
+					}
+				}
+				fs.unlink(path.join(buildDirectory, file.name));
+				deleted ++;
+			}
+			vscode.window.showInformationMessage(`${deleted} file(s) deleted`);
+		} else {
+			vscode.window.showInformationMessage('No files to delete');
+		}
 		
+		if (download_files.length > 0) {
+			let replaced = 0;
+			let replace_all = false;
+			for (const file of download_files) {
+				// Check if in local
+				// if it is, ask to replace
+				// download and save (https://www.tutorialpedia.org/blog/how-to-download-a-file-with-node-js-without-using-third-party-libraries/)
+				// /!\ requires url!
+			}
+			vscode.window.showInformationMessage(`${replaced} file(s) replaced`);
+		} else {
+			vscode.window.showInformationMessage('No files to download');
+		}
 	})
 
 
@@ -138,7 +237,7 @@ function activate(context) {
 		}).then(async response => {
 			if (response.status == 200) {
 				const data = await response.json();
-				const remote_files = data.files;	
+				const remote_files = data.files;
 
 				upload_files = local_files.filter(local_file => {
 					const remote_file = remote_files.find(remote_file => {
