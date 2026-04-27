@@ -67,6 +67,26 @@ function activate(context) {
 		vscode.window.showInformationMessage('Logout successful');
 	})
 
+
+	vscode.commands.registerCommand('neocities.pull', async function () {
+		const api_key = await context.secrets.get('neocities.api_key');
+		if (!api_key) {
+			vscode.window.showErrorMessage(
+				'Please login first',
+				{ title: 'Login', command: 'neocities.login' },
+			).then(async ({title, command}) => {
+				console.log(title, command);
+				if (command) {
+					await vscode.commands.executeCommand(command);
+				}
+			})
+			return;
+		}
+
+		
+	})
+
+
 	vscode.commands.registerCommand('neocities.push', async function () {
 		const api_key = await context.secrets.get('neocities.api_key');
 		if (!api_key) {
@@ -80,13 +100,13 @@ function activate(context) {
 				}
 			})
 			return;
-		}	
+		}
 
 		const subdirectory = vscode.workspace.getConfiguration('neocities').get('subdirectory');
 		let glob = "**/*"
 		if (subdirectory !== "") {
 			glob = subdirectory + "/" + glob;
-		}		
+		}
 		const file_names = await vscode.workspace.findFiles(glob);
 		console.log(file_names);
 
