@@ -1,3 +1,10 @@
+# fork goal
+
+I'm trying to figure out how to get an extension working, with zero experience with node.js...
+I want to add:
+- a "pull" command
+- support for a .neoignore file
+
 # neocities README
 
 this extension should help you manage your neocities site. 
